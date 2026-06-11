@@ -33,8 +33,8 @@ void ble_hrm_handle_activity_prefs_heart_rate_is_enabled(bool is_enabled);
 void ble_hrm_handle_disconnection(GAPLEConnection *connection);
 
 //! Enable or disable BLE HRM workout mode.
-//! When enabled, the HRM service is advertised and all subscribed devices
-//! automatically receive HR data without requiring explicit user permission.
+//! When enabled, the HRM service is advertised and subscribed devices automatically receive HR data
+//! without a permission prompt, unless sharing was explicitly declined for that device.
 //! This allows the watch to act as a standard BLE heart rate monitor for external devices.
 void ble_hrm_set_workout_mode(bool enabled);
 

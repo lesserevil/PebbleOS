@@ -89,6 +89,7 @@ bool activity_sessions_prv_is_sleep_activity(ActivitySessionType activity_type) 
     case ActivitySessionType_Walk:
     case ActivitySessionType_Run:
     case ActivitySessionType_Open:
+    case ActivitySessionType_External:
       return false;
     case ActivitySessionType_None:
     case ActivitySessionTypeCount:
@@ -110,6 +111,7 @@ static bool prv_is_valid_activity_session(ActivitySession *session) {
     case ActivitySessionType_Walk:
     case ActivitySessionType_Run:
     case ActivitySessionType_Open:
+    case ActivitySessionType_External:
       break;
     case ActivitySessionType_None:
     case ActivitySessionTypeCount:
@@ -536,6 +538,7 @@ static void prv_log_activities(time_t now_utc) {
       case ActivitySessionType_Walk:
       case ActivitySessionType_Run:
       case ActivitySessionType_Open:
+      case ActivitySessionType_External:
         params = &class_settings[ActivityClass_Step];
         break;
       case ActivitySessionType_None:

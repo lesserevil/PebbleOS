@@ -14,6 +14,9 @@
 #include "applib/health_service.h"
 #include "kernel/events.h"
 #include "kernel/pbl_malloc.h"
+#ifdef CONFIG_HRM
+#include "pbl/services/bluetooth/ble_hrm.h"
+#endif
 #include "pbl/services/evented_timer.h"
 #include "pbl/services/regular_timer.h"
 #include "system/passert.h"
@@ -87,6 +90,14 @@ static void prv_put_event(PebbleWorkoutEventType e_type) {
     }
   };
   event_put(&event);
+}
+
+static void prv_set_external_hrm_mode(ActivitySessionType type, bool enabled) {
+#ifdef CONFIG_HRM
+  if (type == ActivitySessionType_External) {
+    ble_hrm_set_workout_mode(enabled);
+  }
+#endif
 }
 
 static int32_t prv_get_avg_hr(void) {
@@ -400,6 +411,9 @@ bool workout_service_start_workout(ActivitySessionType type) {
   }
 unlock:
   prv_unlock();
+  if (rv) {
+    prv_set_external_hrm_mode(type, true);
+  }
   return rv;
 }
 
@@ -445,6 +459,7 @@ unlock:
 // ---------------------------------------------------------------------------------------
 bool workout_service_stop_workout(void) {
   bool save_session = false;
+  ActivitySessionType stopped_type = ActivitySessionType_Invalid;
   ActivitySession session_to_save;
   int32_t avg_hr_to_save = 0;
   int32_t hr_zone_time_s_to_save[HRZoneCount];
@@ -458,6 +473,7 @@ bool workout_service_stop_workout(void) {
     }
 
     CurrentWorkoutData *wrkt = s_workout_data.current_workout;
+    stopped_type = wrkt->type;
 
     // Snapshot the session data so we can persist it after dropping the
     // workout mutex. activity_insights_push_activity_session_notification
@@ -504,6 +520,8 @@ bool workout_service_stop_workout(void) {
     s_workout_data.current_workout = NULL;
   }
   prv_unlock();
+
+  prv_set_external_hrm_mode(stopped_type, false);
 
   if (save_session) {
     activity_sessions_prv_add_activity_session(&session_to_save);

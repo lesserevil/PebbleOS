@@ -982,7 +982,6 @@ WorkoutActiveWindow *workout_active_create_for_activity_type(ActivitySessionType
 
   switch (type) {
     case ActivitySessionType_Open:
-    case ActivitySessionType_External:
     {
       if (hrm_is_available) {
         WorkoutMetricType scrollable_metrics[] = {WorkoutMetricType_Duration};

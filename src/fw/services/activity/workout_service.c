@@ -92,10 +92,17 @@ static void prv_put_event(PebbleWorkoutEventType e_type) {
   event_put(&event);
 }
 
-static void prv_set_external_hrm_mode(ActivitySessionType type, bool enabled) {
+static bool prv_is_ble_hrm_workout_type(ActivitySessionType type) {
+  return type == ActivitySessionType_Walk ||
+         type == ActivitySessionType_Run ||
+         type == ActivitySessionType_Open;
+}
+
+static void prv_set_ble_hrm_workout_mode(ActivitySessionType type, bool enabled) {
 #ifdef CONFIG_HRM
-  if (type == ActivitySessionType_External) {
-    ble_hrm_set_workout_mode(enabled);
+  if (prv_is_ble_hrm_workout_type(type)) {
+    ble_hrm_set_workout_mode(enabled &&
+                             activity_prefs_ble_hrm_workout_sharing_is_enabled());
   }
 #endif
 }
@@ -200,10 +207,29 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
 
 // ---------------------------------------------------------------------------------------
 bool workout_service_is_workout_type_supported(ActivitySessionType type) {
-  return type == ActivitySessionType_Walk ||
-         type == ActivitySessionType_Run ||
-         type == ActivitySessionType_Open ||
-         type == ActivitySessionType_External;
+  return prv_is_ble_hrm_workout_type(type);
+}
+
+// ---------------------------------------------------------------------------------------
+void workout_service_handle_ble_hrm_workout_sharing_prefs_changed(void) {
+#ifdef CONFIG_HRM
+  if (!s_workout_data.s_workout_mutex) {
+    return;
+  }
+
+  ActivitySessionType type = ActivitySessionType_Invalid;
+  prv_lock();
+  {
+    if (s_workout_data.current_workout) {
+      type = s_workout_data.current_workout->type;
+    }
+  }
+  prv_unlock();
+
+  if (type != ActivitySessionType_Invalid) {
+    prv_set_ble_hrm_workout_mode(type, true);
+  }
+#endif
 }
 
 // ---------------------------------------------------------------------------------------
@@ -412,7 +438,7 @@ bool workout_service_start_workout(ActivitySessionType type) {
 unlock:
   prv_unlock();
   if (rv) {
-    prv_set_external_hrm_mode(type, true);
+    prv_set_ble_hrm_workout_mode(type, true);
   }
   return rv;
 }
@@ -521,7 +547,7 @@ bool workout_service_stop_workout(void) {
   }
   prv_unlock();
 
-  prv_set_external_hrm_mode(stopped_type, false);
+  prv_set_ble_hrm_workout_mode(stopped_type, false);
 
   if (save_session) {
     activity_sessions_prv_add_activity_session(&session_to_save);

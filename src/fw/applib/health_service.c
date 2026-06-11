@@ -1380,9 +1380,6 @@ void health_service_activities_iterate(HealthActivityMask activity_mask,
         case ActivitySessionType_Open:
           session_activity = HealthActivityOpenWorkout;
           break;
-        case ActivitySessionType_External:
-          session_activity = HealthActivityExternal;
-          break;
         case ActivitySessionType_None:
         case ActivitySessionTypeCount:
           WTF;

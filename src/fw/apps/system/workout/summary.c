@@ -51,8 +51,6 @@ static KinoReel* prv_get_icon_for_activity(ActivitySessionType type) {
       return kino_reel_create_with_resource(RESOURCE_ID_WORKOUT_APP_WORKOUT);
     case ActivitySessionType_Walk:
       return kino_reel_create_with_resource(RESOURCE_ID_WORKOUT_APP_WALK);
-    case ActivitySessionType_External:
-      return kino_reel_create_with_resource(RESOURCE_ID_WORKOUT_APP_EXTERNAL);
     case ActivitySessionType_Run:
     default:
       return kino_reel_create_with_resource(RESOURCE_ID_WORKOUT_APP_RUN);

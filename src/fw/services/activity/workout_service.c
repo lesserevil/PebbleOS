@@ -191,7 +191,8 @@ static void prv_handle_heart_rate_update(HealthEventHeartRateUpdateData *event) 
 bool workout_service_is_workout_type_supported(ActivitySessionType type) {
   return type == ActivitySessionType_Walk ||
          type == ActivitySessionType_Run ||
-         type == ActivitySessionType_Open;
+         type == ActivitySessionType_Open ||
+         type == ActivitySessionType_External;
 }
 
 // ---------------------------------------------------------------------------------------

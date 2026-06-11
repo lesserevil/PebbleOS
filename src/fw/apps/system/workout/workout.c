@@ -22,6 +22,7 @@
 #include "pbl/services/activity/activity_private.h"
 #include "pbl/services/activity/health_util.h"
 #include "pbl/services/activity/workout_service.h"
+#include "pbl/services/bluetooth/ble_hrm.h"
 #include "system/logging.h"
 #include "resource/resource_ids.auto.h"
 #include "popups/health_tracking_ui.h"
@@ -71,6 +72,12 @@ static void prv_prep_and_open_active_window(ActivitySessionType type) {
 
 static void prv_start_workout_cb(ActivitySessionType type) {
   workout_service_start_workout(type);
+  
+  // Enable BLE HRM workout mode for External activity type
+  if (type == ActivitySessionType_External) {
+    ble_hrm_set_workout_mode(true);
+  }
+  
   prv_prep_and_open_active_window(type);
 }
 
@@ -89,6 +96,10 @@ static void prv_detected_workout_up_click_handler(ClickRecognizerRef recognizer,
   WorkoutAppData *data = context;
 
   if (workout_service_takeover_activity_session(&data->ongoing_session)) {
+    // Enable BLE HRM workout mode for External activity type
+    if (data->ongoing_session.type == ActivitySessionType_External) {
+      ble_hrm_set_workout_mode(true);
+    }
     prv_prep_and_open_active_window(data->ongoing_session.type);
   }
 
@@ -216,6 +227,12 @@ static void prv_init(void) {
 
   if (workout_service_is_workout_ongoing()) {
     if (app_launch_get_args() == WorkoutLaunchArg_EndWorkout) {
+      // Disable BLE HRM workout mode if ending an External workout
+      ActivitySessionType existing_workout_type;
+      if (workout_service_get_current_workout_type(&existing_workout_type) &&
+          existing_workout_type == ActivitySessionType_External) {
+        ble_hrm_set_workout_mode(false);
+      }
       workout_service_stop_workout();
       prv_show_workout_ended_dialog(data);
     } else {
@@ -238,6 +255,14 @@ static void prv_init(void) {
 
 static void prv_deinit(void) {
   WorkoutAppData *data = app_state_get_user_data();
+  
+  // Disable BLE HRM workout mode if an External workout was ongoing
+  ActivitySessionType current_type;
+  if (workout_service_get_current_workout_type(&current_type) &&
+      current_type == ActivitySessionType_External) {
+    ble_hrm_set_workout_mode(false);
+  }
+  
   workout_service_frontend_closed();
   app_free(data);
 }

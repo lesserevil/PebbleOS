@@ -37,6 +37,7 @@ typedef struct BLEHRMSharingRequest {
 
 static bool s_ble_hrm_is_inited;
 static int s_ble_hrm_subscription_count;
+static bool s_ble_hrm_workout_mode;
 static RegularTimerInfo s_ble_hrm_timer;
 static struct {
   EventServiceInfo service_info;
@@ -457,6 +458,63 @@ void ble_hrm_deinit(void) {
 // For unit testing
 RegularTimerInfo *ble_hrm_timer(void) {
   return &s_ble_hrm_timer;
+}
+
+static bool prv_workout_mode_enable_cb(GAPLEConnection *connection, void *unused) {
+  if (prv_get_permission_by_device(&connection->device) == HrmSharingPermission_Unknown) {
+    prv_update_permission(connection, HrmSharingPermission_Granted);
+  }
+  return true;
+}
+
+static bool prv_workout_mode_disable_cb(GAPLEConnection *connection, void *unused) {
+  if (prv_get_permission_by_device(&connection->device) == HrmSharingPermission_Granted) {
+    prv_update_permission(connection, HrmSharingPermission_Declined);
+    prv_disconnect_to_kill_subscription(connection);
+  }
+  return true;
+}
+
+void ble_hrm_set_workout_mode(bool enabled) {
+  if (!prv_hw_and_sw_supports_hrm()) {
+    return;
+  }
+
+  PBL_LOG_INFO("BLE HRM workout mode: enabled=%u", enabled);
+
+  bt_lock();
+
+  if (enabled == s_ble_hrm_workout_mode) {
+    bt_unlock();
+    return;
+  }
+
+  s_ble_hrm_workout_mode = enabled;
+
+  if (enabled) {
+    // In workout mode, auto-grant permission to all currently connected devices
+    // and any future connections
+    gap_le_connection_for_each(prv_workout_mode_enable_cb, NULL);
+
+    // Start advertising the HRM service so external devices can discover us
+    gap_le_slave_reconnect_hrm_restart();
+
+    // Enable the HRM service
+    bt_driver_hrm_service_enable(true);
+  } else {
+    // Revoke auto-granted permissions
+    gap_le_connection_for_each(prv_workout_mode_disable_cb, NULL);
+
+    // Stop advertising the HRM service
+    gap_le_slave_reconnect_hrm_stop();
+
+    // If no regular HRM sharing is active, disable the HRM service
+    if (s_ble_hrm_subscription_count == 0) {
+      bt_driver_hrm_service_enable(false);
+    }
+  }
+
+  bt_unlock();
 }
 
 #endif

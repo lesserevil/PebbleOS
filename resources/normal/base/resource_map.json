@@ -2496,6 +2496,21 @@
     },
     {
       "type": "png",
+      "name": "WORKOUT_APP_EXTERNAL",
+      "file": "normal/base/images/workout_app_external.png"
+    },
+    {
+      "type": "png",
+      "name": "WORKOUT_APP_EXTERNAL_SMALL",
+      "file": "normal/base/images/workout_app_external_small.png"
+    },
+    {
+      "type": "png",
+      "name": "WORKOUT_APP_EXTERNAL_TINY",
+      "file": "normal/base/images/workout_app_external_tiny.png"
+    },
+    {
+      "type": "png",
       "name": "WORKOUT_APP_DETECTED",
       "file": "normal/base/images/workout_app_detected.png"
     },

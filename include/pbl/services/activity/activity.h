@@ -168,6 +168,9 @@ typedef enum {
   // Open workout. Basically a catch all / generic activity type
   ActivitySessionType_Open = 7,
 
+  // External workout - acts as a BLE heart rate monitor for external devices
+  ActivitySessionType_External = 8,
+
   // Leave at end
   ActivitySessionTypeCount,
   ActivitySessionType_Invalid = ActivitySessionTypeCount,

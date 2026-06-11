@@ -22,6 +22,7 @@
 #include "pbl/services/activity/health_util.h"
 #include "pbl/services/activity/hr_util.h"
 #include "pbl/services/activity/workout_service.h"
+#include "pbl/services/bluetooth/ble_hrm.h"
 #include "system/logging.h"
 #include "util/size.h"
 
@@ -646,6 +647,13 @@ static void prv_end_workout_up_click_handler(ClickRecognizerRef recognizer, void
 
   if (active_window->workout_controller) {
     active_window->workout_controller->stop();
+  }
+
+  // Disable BLE HRM workout mode if it was an External workout
+  ActivitySessionType current_type;
+  if (workout_service_get_current_workout_type(&current_type) &&
+      current_type == ActivitySessionType_External) {
+    ble_hrm_set_workout_mode(false);
   }
 
   workout_push_summary_window();
